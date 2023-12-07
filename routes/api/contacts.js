@@ -1,76 +1,87 @@
-const fs = require('fs/promises');
-const path = require('node:path');
+const express = require('express')
+const {listContacts, getContactById, validateContact, addContact, removeContact, updateContact} = require("../../models/contacts");
 
-const contactsPath = path.resolve('models', 'contacts.json');
+const router = express.Router()
 
-const Joi = require('joi');
+router.get('/', async (req, res, next) => {
+  try {
+    const contacts = await listContacts();
+    res.status(200).json(contacts);
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+})
 
-const contactSchema = Joi.object({
-  name: Joi.string().required(),
-  email: Joi.string().email().required(),
-  phone: Joi.string().required(),
-});
+router.get('/:contactId', async (req, res, next) => {
+  const { contactId } = req.params;
+  try {
+    const contact = await getContactById(contactId);
+    if (contact) {
+      res.status(200).json(contact);
+    } else {
+      res.status(404).json({ message: 'Not found' });
+    }
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+})
 
-function validateContact(contact) {
-  return contactSchema.validate(contact);
-}
+router.post('/', async (req, res, next) => {
+  const { name, email, phone } = req.body;
 
-async function listContacts() {
-  const data = await fs.readFile(contactsPath, 'utf-8');
-  return JSON.parse(data);
-}
+  const validationResult = validateContact({ name, email, phone });
 
-async function getContactById(contactId) {
-  const contacts = await listContacts();
-  return contacts.find((contact) => contact.id === contactId);
-}
-
-async function addContact(contact) {
-  const contacts = await listContacts();
-  const newContact = { ...contact, id: String(Date.now()) };
-  contacts.push(newContact);
-
-  await fs.writeFile(contactsPath, JSON.stringify(contacts, null, 2));
-
-  return newContact;
-}
-
-async function removeContact(contactId) {
-  const contacts = await listContacts();
-  const index = contacts.findIndex((contact) => contact.id === contactId);
-
-  if (index === -1) {
-    return null;
+  if (validationResult.error) {
+    return res.status(400).json({ message: validationResult.error.message });
   }
 
-  const [removedContact] = contacts.splice(index, 1);
+  try {
+    const newContact = await addContact({ name, email, phone });
+    res.status(201).json(newContact);
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+})
 
-  await fs.writeFile(contactsPath, JSON.stringify(contacts, null, 2));
+router.delete('/:contactId', async (req, res, next) => {
+  const { contactId } = req.params;
+  try {
+    const result = await removeContact(contactId);
+    if (result) {
+      res.status(200).json({ message: 'Contact deleted' });
+    } else {
+      res.status(404).json({ message: 'Not found' });
+    }
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+})
 
-  return removedContact;
-}
+router.put('/:contactId', async (req, res, next) => {
+  const { contactId } = req.params;
+  const { name, email, phone } = req.body;
 
-async function updateContact(contactId, data) {
-  const contacts = await listContacts();
-  const index = contacts.findIndex((contact) => contact.id === contactId);
+  const validationResult = validateContact({ name, email, phone });
 
-  if (index === -1) {
-    return null;
+  if (validationResult.error) {
+    return res.status(400).json({ message: validationResult.error.message });
   }
 
-  const updatedContact = { ...contacts[index], ...data };
-  contacts[index] = updatedContact;
+  try {
+    const updatedContact = await updateContact(contactId, { name, email, phone });
+    if (updatedContact) {
+      res.status(200).json(updatedContact);
+    } else {
+      res.status(404).json({ message: 'Not found' });
+    }
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+})
 
-  await fs.writeFile(contactsPath, JSON.stringify(contacts, null, 2));
-
-  return updatedContact;
-}
-
-module.exports = {
-  listContacts,
-  getContactById,
-  addContact,
-  removeContact,
-  updateContact,
-  validateContact,
-};
+module.exports = router
