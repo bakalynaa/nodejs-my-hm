@@ -1,5 +1,12 @@
 const express = require('express')
-const {listContacts, getContactById, validateContact, addContact, removeContact, updateContact} = require("../../models/contacts");
+const {
+  listContacts,
+  getContactById,
+  validateContact,
+  addContact,
+  removeContact,
+  updateContact,
+  updateStatusContact} = require("../../models/contacts");
 
 const router = express.Router()
 
@@ -78,6 +85,28 @@ router.put('/:contactId', async (req, res, next) => {
     } else {
       res.status(404).json({ message: 'Not found' });
     }
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+})
+
+router.patch('/:contactId/favorite', async (req, res) => {
+  const { contactId } = req.params;
+  const { favorite } = req.body;
+
+  if (favorite === undefined) {
+    return res.status(400).json({ message: 'missing field favorite' });
+  }
+
+  try {
+    const updatedContact = await updateStatusContact(contactId,  { favorite } );
+
+    if (!updatedContact) {
+      return res.status(404).json({ message: 'Not found' });
+    }
+
+    res.status(200).json(updatedContact);
   } catch (error) {
     console.error(error.message);
     res.status(500).json({ message: 'Internal Server Error' });
