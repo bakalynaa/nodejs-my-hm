@@ -7,10 +7,11 @@ const {
   removeContact,
   updateContact,
   updateStatusContact} = require("../../models/contacts");
+const authenticate = require("../../middleware/authenticate");
 
 const router = express.Router()
 
-router.get('/', async (req, res, next) => {
+router.get('/', authenticate, async (req, res) => {
   try {
     const contacts = await listContacts();
     res.status(200).json(contacts);
@@ -20,7 +21,7 @@ router.get('/', async (req, res, next) => {
   }
 })
 
-router.get('/:contactId', async (req, res, next) => {
+router.get('/:contactId', authenticate, async (req, res) => {
   const { contactId } = req.params;
   try {
     const contact = await getContactById(contactId);
@@ -35,7 +36,7 @@ router.get('/:contactId', async (req, res, next) => {
   }
 })
 
-router.post('/', async (req, res, next) => {
+router.post('/', authenticate, async (req, res) => {
   const { name, email, phone } = req.body;
 
   const validationResult = validateContact({ name, email, phone });
@@ -53,7 +54,7 @@ router.post('/', async (req, res, next) => {
   }
 })
 
-router.delete('/:contactId', async (req, res, next) => {
+router.delete('/:contactId', authenticate, async (req, res) => {
   const { contactId } = req.params;
   try {
     const result = await removeContact(contactId);
@@ -68,7 +69,7 @@ router.delete('/:contactId', async (req, res, next) => {
   }
 })
 
-router.put('/:contactId', async (req, res, next) => {
+router.put('/:contactId', authenticate, async (req, res) => {
   const { contactId } = req.params;
   const { name, email, phone } = req.body;
 
