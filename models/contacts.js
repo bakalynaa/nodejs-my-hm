@@ -19,6 +19,7 @@ const contactSchemaDB = new Schema({
     type: Schema.Types.ObjectId,
     ref: "user"
   },
+  avatarURL: String,
 });
 
 const Contact = model('Contact', contactSchemaDB);
