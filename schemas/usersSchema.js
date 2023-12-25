@@ -1,4 +1,3 @@
-const Joi = require("joi");
 const { model, Schema } = require("mongoose");
 const {mongooseHandleError} = require("../middleware/mongooseHandleError");
 
@@ -25,6 +24,7 @@ const userSchema = new Schema(
             default: "starter",
         },
         token: { type: String, default: null },
+        avatarURL: String,
     },
     { versionKey: false, timestamps: true }
 );

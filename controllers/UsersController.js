@@ -2,6 +2,7 @@ const asyncHandler = require("express-async-handler");
 const UsersService = require("../models/user");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
+const UserModel = require("../schemas/usersSchema");
 
 
 const createUser = asyncHandler(async ({body}, res) => {
@@ -101,11 +102,26 @@ const updateSubscription = asyncHandler(async (req, res) => {
     });
 });
 
+const updateContactAvatar = async (userId, avatarURL) => {
+    try {
+        const user = await UserModel.findByIdAndUpdate(
+            userId,
+            { avatarURL },
+            { new: true }
+        );
+
+        return user;
+    } catch (error) {
+        throw error;
+    }
+}
+
 
 module.exports = {
     createUser,
     loginUser,
     logout,
     updateSubscription,
-    getCurrentContacts
+    getCurrentContacts,
+    updateContactAvatar
 }
