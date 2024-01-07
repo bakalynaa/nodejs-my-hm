@@ -1,4 +1,4 @@
-const { model, Schema } = require("mongoose");
+const {model, Schema} = require("mongoose");
 const {mongooseHandleError} = require("../middleware/mongooseHandleError");
 
 
@@ -23,10 +23,18 @@ const userSchema = new Schema(
             enum: ["starter", "pro", "business"],
             default: "starter",
         },
-        token: { type: String, default: null },
+        token: {type: String, default: null},
         avatarURL: String,
+        verify: {
+            type: Boolean,
+            default: false,
+        },
+        verificationToken: {
+            type: String,
+            required: [true, 'Verify token is required'],
+        },
     },
-    { versionKey: false, timestamps: true }
+    {versionKey: false, timestamps: true}
 );
 
 userSchema.post("save", mongooseHandleError);

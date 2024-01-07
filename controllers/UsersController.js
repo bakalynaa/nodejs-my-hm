@@ -3,6 +3,8 @@ const UsersService = require("../models/user");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const UserModel = require("../schemas/usersSchema");
+const uuid = require("node:uuid");
+const sendEmail = require("../emailSender");
 
 
 const createUser = asyncHandler(async ({body}, res) => {
@@ -13,7 +15,17 @@ const createUser = asyncHandler(async ({body}, res) => {
         new Error("Email in use");
     }
 
+    const verificationToken = uuid.v4();
+
     const createdUser = await UsersService.createUser(body);
+
+    const verifyEmail = {
+        to: createdUser.email,
+        subject: "Verify email",
+        html: `<a target="_blank" href="http://localhost:${process.env.PORT}/users/verify/${verificationToken}">Verify your email</a>`,
+    };
+
+    sendEmail(verifyEmail);
 
     res.status(201).json({
         code: 201,
